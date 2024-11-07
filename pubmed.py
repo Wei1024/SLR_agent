@@ -599,20 +599,19 @@ def fetch_pubmed_data(query_sets: list, output_filename: str = "pubmed_results.c
 # Example usage:
 if __name__ == "__main__":
     # Define your query sets as a list of query strings
+    # Define your query sets as a list of query strings
     QUERY_SETS = [
-        "(\"large language model\" OR LLM OR \"GPT-4o\" OR \"Claude 3.5\" OR \"Grok-1\" OR "
-        "\"PaLM 2\" OR \"Falcon 180B\" OR \"transformer\" OR \"generative AI\") "
-        "AND (\"systematic review\" OR \"literature review\" OR \"evidence synthesis\" OR "
-        "\"data extraction\" OR \"information retrieval\")",
-        "(\"systematic review automation\" OR \"automated systematic review\" OR "
-        "\"AI-assisted literature review\" OR \"data extraction\") "
-        "AND (\"health economics\" OR \"outcomes research\" OR pharmacoeconomics OR "
-        "\"real-world evidence\")",
-        "(\"AI model\" OR \"machine learning\" OR \"deep learning\" OR \"transformer model\" OR "
-        "\"BERT\" OR \"large language model\" OR LLM) "
-        "AND (\"health economics\" OR \"outcomes research\" OR pharmacoeconomics OR "
-        "\"real-world evidence\")"
+    # Query 1: Focus on GLP-1 and SGLT2 comparison
+    '("GLP-1"[All Fields] OR "glucagon like peptide"[All Fields]) AND ("SGLT2"[All Fields] OR "sodium glucose"[All Fields]) AND "diabetes"[All Fields] AND "english"[Language] AND ("2020"[Date - Publication] : "2024"[Date - Publication])',
+    
+    # Query 2: Focus on specific drugs
+    '(semaglutide OR liraglutide OR dulaglutide OR exenatide) AND (dapagliflozin OR empagliflozin OR canagliflozin) AND diabetes AND english[Language] AND ("2020"[Date - Publication] : "2024"[Date - Publication])',
+    
+    # Query 3: Focus on outcomes
+    '"Diabetes Mellitus, Type 2"[Mesh] AND (GLP-1 OR SGLT2) AND (HbA1c OR weight) AND english[Language] AND ("2020"[Date - Publication] : "2024"[Date - Publication])'
     ]
+    # Save results to a specific file
+    output_filename = "diabetes_treatment_comparison_results.csv"
 
-    # Call the function with the query sets
-    fetch_pubmed_data(QUERY_SETS, output_filename="result_1.csv")
+    # Run the search
+    fetch_pubmed_data(QUERY_SETS, output_filename=output_filename)
