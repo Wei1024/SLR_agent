@@ -6,7 +6,7 @@ import chainlit as cl
 import aiohttp
 from dotenv import load_dotenv
 import anthropic
-
+from prompt_template import search_strategy_prompt, search_strategy_agent_system_prompt
 # Load environment variables from .env file
 load_dotenv()
 
@@ -108,6 +108,31 @@ async def pico_tool(query: str) -> str:
         return response.content[0].text  # Access the response text correctly
     except Exception as e:
         return json.dumps({"error": f"Failed to generate PICO: {str(e)}"})
+    
+@cl.step(type="tool", show_input="json", language="json")
+async def search_strategy_tool(query: str) -> str:
+    """Generate a PICO framework using Claude from Anthropic.
+    
+    Args:
+        query (str): The clinical question to analyze
+        
+    Returns:
+        str: PICO framework response or error message
+    """
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            system= search_strategy_prompt,
+            messages=[{
+                "role": "user", 
+                "content": query
+            }],
+            max_tokens=1000,
+            temperature=0,
+        )
+        return response.content[0].text  # Access the response text correctly
+    except Exception as e:
+        return json.dumps({"error": f"Failed to generate PICO: {str(e)}"})
 
 tools = [
     {
@@ -145,36 +170,32 @@ tools = [
                 "required": ["query"],
             },
         },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_strategy_tool",
+            "description": "Generate search strategy using Claude",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query for search strategy generation.",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
     }
 ]
 
-system_prompt = """
-You are tasked with generating a comprehensive search strategy for PubMed/Medline based on the key concepts of a HEOR (Health Economics and Outcomes Research) research question. This search strategy will help researchers find relevant literature efficiently and effectively.
-
-Follow these steps to create your search strategy:
-
-1. Analyze the user's HEOR research question:
-   - Identify the main themes or topics
-   - Recognize any population, intervention, comparison, or outcome (PICO) elements
-   - Note any specific conditions, treatments, or outcomes mentioned
-
-2. For each key concept, create a list of search terms using the search tool
-3. Combine search terms using Boolean operators
-4. Incorporate MeSH terms
-5. Create the final search strategy
-6. Add necessary filters
-7. Present the strategy
-8. Provide a brief explanation
-
-Present your final search strategy and explanation within <search_strategy> tags.
-Always finish one step at a time, and confirm with users before proceeding.
-"""
 
 @cl.on_chat_start
 def start_chat():
     cl.user_session.set(
         "message_history",
-        [{"role": "system", "content": system_prompt}]
+        [{"role": "system", "content": search_strategy_agent_system_prompt}]
     )
 
 @cl.on_message
@@ -215,6 +236,8 @@ async def run_conversation(message: cl.Message):
                     )
                 elif function_name == "pico_tool":
                     result = await pico_tool(query=function_args.get("query"))
+                elif function_name == "search_strategy_tool":
+                    result = await search_strategy_tool(query=function_args.get("query"))
                 else:
                     result = json.dumps({"error": f"Unknown function {function_name}"})
 
@@ -238,6 +261,7 @@ async def run_conversation(message: cl.Message):
         second_response = await client.chat.completions.create(
             model="gpt-4o",  # Fixed model name
             messages=message_history,
+            stream=True
         )
         
         second_message = second_response.choices[0].message
