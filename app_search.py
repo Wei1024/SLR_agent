@@ -261,7 +261,7 @@ async def run_conversation(message: cl.Message):
         second_response = await client.chat.completions.create(
             model="gpt-4o",  # Fixed model name
             messages=message_history,
-            stream=True
+            #stream=True
         )
         
         second_message = second_response.choices[0].message
