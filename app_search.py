@@ -11,8 +11,8 @@ from prompt_template import search_strategy_prompt, search_strategy_agent_system
 load_dotenv()
 
 # Retrieve the OpenAI API key from environment variables
-api_key = os.getenv("OPENAI_API_KEY")
-client = AsyncOpenAI(api_key=api_key)
+openai_api_key = os.getenv("OPENAI_API_KEY")
+client = AsyncOpenAI(api_key=openai_api_key)
 
 # Initialize the Anthropic client with API key
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -205,7 +205,7 @@ async def run_conversation(message: cl.Message):
 
     # First API call
     response = await client.chat.completions.create(
-        model="gpt-4o",  # Fixed model name
+        model="gpt-4o-mini",  # Fixed model name
         messages=message_history,
         tools=tools,
         tool_choice="auto",
@@ -258,13 +258,23 @@ async def run_conversation(message: cl.Message):
                 })
 
         # Second API call with tool results
-        second_response = await client.chat.completions.create(
-            model="gpt-4o",  # Fixed model name
+        msg = cl.Message(content="", author="Assistant")
+        await msg.send()
+
+        stream = await client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=message_history,
-            #stream=True
+            stream=True
         )
-        
-        second_message = second_response.choices[0].message
-        if second_message.content:
-            await cl.Message(author="Assistant", content=second_message.content).send()
-            message_history.append(second_message.model_dump())
+
+        full_content = ""
+        async for part in stream:
+            if token := part.choices[0].delta.content or "":
+                await msg.stream_token(token)
+                full_content += token
+
+        message_history.append({
+            "role": "assistant",
+            "content": full_content
+        })
+        await msg.update()
