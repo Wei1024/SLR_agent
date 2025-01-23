@@ -247,9 +247,9 @@ You are tasked with generating a comprehensive search strategy for PubMed/Medlin
 Follow these steps to create your search strategy:
 
 1. Analyze the user's HEOR research question to create PICO criteria using the pico tool, report the results from the pico tool directly, including the additional criterias, without changing a word
-2. For each key concept, create a list of search terms using the search tool
+2. For each key concept, create a detailed list of search terms.
     *Note": it is common to define time range; when it happens, search online to know the current date first.
-3. making sure all the synonyms and MeSH terms are covered using the search tool to check
+3. Use search tool to find all the synonyms and MeSH terms for the key concepts, please be specific for each key concept when forming the search query
 4. Complete the search strategy using the search_strategy tool and display the markdown table in markdown table format
 
 
